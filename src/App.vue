@@ -19,39 +19,84 @@
         </div>
       </div>
     </div>
+    <nav aria-label="Page navigation example">
+      <ul class="pagination">
+        <li class="page-item">
+          <a class="page-link" :class="{ 'disabled': currentPage === 1 }" @click="getData(currentPage - 1)" aria-label="Previous">
+            <span aria-hidden="true">&laquo;</span>
+          </a>
+        </li>
+
+        <li v-for="current in lastPage" :key="current" class="page-item"><a class="page-link" :class="{'active': currentPage == current}" @click="getData(current)">{{current}}</a></li>
+
+        <li class="page-item">
+          <a class="page-link" :class="{ 'disabled': currentPage === lastPage }" @click="getData(currentPage + 1)" aria-label="Next">
+            <span aria-hidden="true">&raquo;</span>
+          </a>
+        </li>
+      </ul>
+    </nav>
+
+    <div>
+      <ul>
+        <li v-for="category in categories" :key="category.id"><a @click="getProjectsCategory(category)" href="#">{{ category.name }}</a></li>
+      </ul>
+    </div>
 
   </div>
 </template>
 
 <script>
 import axios from 'axios';
+
 export default {
-  'name': 'App',
+  name: 'App',
   data() {
-      return {
-          prova: 'Project',
-          projects: [],
-          apiUrl: 'http://127.0.0.1:8000/api',
-          imgBasePath: 'http://127.0.0.1:8000/storage/'
-           
-      }
+    return {
+      projects: [],
+      categories: [],
+      currentPage: 1,
+      lastPage: null,
+    };
   },
-  methods:{
-    getData(){
-      axios.get(`${this.apiUrl}/project`).then((res) => {
-        console.log(res)
-        this.projects = res.data.results;
-
+  computed: {
+    apiUrl() {
+      return 'http://127.0.0.1:8000/api';
+    },
+    
+  },
+  methods: {
+    
+    getData(numPage) {
+      const params = {
+        page: numPage,
+      }
+      axios.get(`${this.apiUrl}/project`,{ params })
+      .then((res) => {
+        //console.log(res.data.data.projects);
+        this.projects = res.data.data.projects.data;
+        this.lastPage = res.data.data.projects.last_page;
+        this.currentPage = res.data.data.projects.current_page;
+        
+        //console.log(res.data.data);
+        this.categories = res.data.data.categories;
       })
-
+      .catch((error) => {
+        console.error(error);
+      });
+    },
+    getProjectsCategory(category) {
+      axios.get(`${this.apiUrl}/project/${category.id}`)
+        .then((res) => {
+          console.log(res)
+          
+        });
     },
   },
   mounted() {
-        this.getData();
-    }
-   
-
-}
+    this.getData();
+  },
+};
 </script>
 
 <style lang="scss" scoped>
